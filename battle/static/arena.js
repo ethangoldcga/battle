@@ -11,6 +11,8 @@ var lastUpdate = null;
 var webSocket = null;
 var stars = [];
 var leaderboardUpdated = false;
+var awidth = 1500;
+var aheight = 1000;
 
 function getArenaId() {
     var loc = window.location;
@@ -131,13 +133,13 @@ function draw(timestamp) {
     const ctx = document.getElementById('canvas').getContext('2d');
 
     ctx.save();
-    ctx.clearRect(0, 0, 1000, 1000);
+    ctx.clearRect(0, 0, awidth, aheight);
     ctx.strokeStyle = 'black';
     ctx.fillStyle = 'black';
-    ctx.fillRect(0, 0, 1000, 1000);
+    ctx.fillRect(0, 0, awidth, aheight);
     ctx.stroke();
     ctx.globalAlpha = 0.3;
-    ctx.drawImage(backgroundImage, 0, 0, backgroundImage.width / 2, backgroundImage.height / 2, 0, 0, 1000, 1000);
+    ctx.drawImage(backgroundImage, 0, 0, backgroundImage.width / 2, backgroundImage.height / 2, 0, 0, awidth, aheight);
     ctx.restore();
 
     ctx.save();
@@ -154,10 +156,10 @@ function draw(timestamp) {
 
     ctx.fillStyle = `white`;
     stars.forEach(star => {
-        const size = (2 - star.z/10)/1000;
+        const size = (2 - star.z/10)/(awidth*aheight/2.0);
         ctx.save();
         ctx.globalAlpha = (10-star.z) / 10;
-        ctx.scale(1000, 1000);
+        ctx.scale(awidth, aheight);
         ctx.fillRect(star.x / star.z, star.y / star.z, size, size);
         ctx.restore();
         star.z -= 0.01;

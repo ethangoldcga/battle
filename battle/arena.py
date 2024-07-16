@@ -43,7 +43,7 @@ class Arena:
             start_position = replace(robot.position)
             start_position.x += 1.01 * robot.radius * cos(angle / 180 * pi)
             start_position.y += 1.01 * robot.radius * sin(angle / 180 * pi)
-            m = Missile(start_position, angle, energy)
+            m = Missile(start_position, angle, energy, robot)
             self.missiles.append(m)
             if robot.firing_progress is None:
                 robot.firing_progress = 0
@@ -135,7 +135,9 @@ class Arena:
                         and target_angle < 0
                         and now_angle < target_angle
                     ):
-                        robot.radar_ping = abs(target.position - robot.position)
+                        #robot.radar_ping = abs(target.position - robot.position)
+                        #### EGOLD: add target ID to a tuple here?
+                        robot.radar_ping = tuple((abs(target.position - robot.position), target.name))
                         break
 
             # Save prior radar state for next calculation
@@ -172,9 +174,10 @@ class Arena:
                 if abs(robot.position - missile.position) < robot.radius:
                     if not missile.exploding:
                         robot.health -= missile.energy
-                        print(f"{robot.name} was hit! Health={robot.health:.2f} Energy={missile.energy:.2f}")
+                        print(f"{robot.name} was hit by {missile.owner.name}! Health={robot.health:.2f} Damage={missile.energy:.2f}")
                         missile.exploding = True
                         robot.got_hit = True
+                        missile.owner.damage_inflicted += missile.energy
                         break
             if (
                 missile.position.x <= 0
@@ -191,6 +194,15 @@ class Arena:
         # Update radar pings
         self.update_radars()
 
+    ## calculate likely winner in one location, not across 2 classes
+    def winner_calc(self):
+        print("ROUND FINAL STATS:")
+        for r in self.robots:
+            print(f"\t{r.name}:\thealth: {r.health:.2f}\tdamage_inflicted: {r.damage_inflicted:.2f}")
+        print()
+        return max(self.robots, key=lambda r: r.health+r.damage_inflicted if r.live() else 0)
+
+        
     def get_winner(self) -> Optional[Robot]:
         """Returns the winner or None if no winner yet"""
         if len(self.robots) <= 1:
@@ -200,7 +212,8 @@ class Arena:
             return remaining[0]
         if len(remaining) == 0:
             # If all robots are dead, return the one that sustained the least damage
-            return max(self.robots, key=lambda r: r.health)
+            return self.winner_calc()
+
         return None
 
     def get_robot(self, robot_name: str) -> Robot:

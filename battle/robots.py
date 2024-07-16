@@ -15,11 +15,13 @@ class GameParameters:
     COMMAND_RATE = 5
     MAX_DAMAGE = 5
     WEAPON_RECHARGE_RATE = 0.1
-    ARENA_WIDTH = 1000
+    ARENA_WIDTH = 1500
     ARENA_HEIGHT = 1000
     EXPLODE_FRAMES = 6
     FIRING_FRAMES = 6
     EXHAUST_FRAMES = 6
+    ADDR = "127.0.0.1"
+    PORT = 8000
 
 
 def random_angle() -> float:
@@ -88,10 +90,11 @@ class Robot:
     radar_ping: Optional[float] = None
     got_hit: bool = False
     bumped_wall: bool = False
+    damage_inflicted: float = 0.0
     firing_progress: Optional[int] = None
     accelerate_progress: Optional[int] = None
     cmd_q_len: Optional[int] = None
-
+    
     def live(self) -> bool:
         """Returns whether robot is still alive"""
         return self.health > 0
@@ -104,10 +107,11 @@ class Robot:
 @dataclass
 class Missile:
     """The current state of a single missile"""
-
+    #### EGOLD: add owner so we can see who shot whom
     position: Position
     angle: float
     energy: float
+    owner: Robot = None
     exploding: bool = False
     explode_progress: int = 0
 

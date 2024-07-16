@@ -3,11 +3,29 @@ import json
 import uuid
 import webbrowser
 from urllib.parse import urljoin, urlsplit
-
+import os
 import websocket
 
 from battle.robots import Robot, RobotCommand
 
+####
+## args available because the driver needs access
+## for passing name in at driver object init time.
+argparser = argparse.ArgumentParser()
+botname = os.environ.get('USERNAME')
+if not botname:
+    botname = os.environ.get('USER')
+if not botname:
+    botname = "mystery"
+    
+argparser.add_argument("--name", default=botname, help="The name of the player.")
+argparser.add_argument("--game-id", default="0", help="The game ID to play - default is 0")
+argparser.add_argument("--url", default="ws://localhost:8000", help="The game server base URL.")
+argparser.add_argument("--browser", action="store_true", help="Open a browser window to watch the game")
+argparser.add_argument(
+    "--secret", type=str, help="A secret to allow reconnect to the same robot in case of disconnect"
+)
+####
 
 def play(robot_name: str, robot_secret: str, driver, url: str):
     """Connects to the game server at `url` and passes robot state updates to the `driver`, and commands back
@@ -46,17 +64,22 @@ def play(robot_name: str, robot_secret: str, driver, url: str):
         print("Connection closed")
 
 
+
+
+
+
 def player_main(robot_name: str, driver):
     """Main entry point for running a robot"""
+    """
     argparser = argparse.ArgumentParser()
-    argparser.add_argument("name", nargs="?", default=robot_name, help="The name of the player.")
+    argparser.add_argument("--name", default=robot_name, help="The name of the player.")
     argparser.add_argument("--game-id", default=0, help="The game ID to play - default is 0")
     argparser.add_argument("--url", default="ws://localhost:8000", help="The game server base URL.")
     argparser.add_argument("--browser", action="store_true", help="Open a browser window to watch the game")
     argparser.add_argument(
         "--secret", type=str, help="A secret to allow reconnect to the same robot in case of disconnect"
     )
-
+    """
     args = argparser.parse_args()
     url = urljoin(args.url.replace("http", "ws"), f"/api/play/{args.game_id}")
     us = urlsplit(args.url)

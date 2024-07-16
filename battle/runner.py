@@ -24,12 +24,12 @@ from battle.radarbot import RadarDriver
 from battle.robots import GameParameters, Robot, RobotCommand, RobotCommandType
 from battle.util import state_as_json
 
+
 TEMPLATE_PATH = Path(__file__).parent / "templates"
 STATIC_PATH = Path(__file__).parent / "static"
 ARENA_STATE_DELAY_LINE_LEN = GameParameters.FPS * 10
 MAX_ARENA_ID = 1000
-MAX_MATCH_PLAYERS = 10
-
+MAX_MATCH_PLAYERS = 20
 
 @dataclass
 class Match:
@@ -64,7 +64,8 @@ async def demo_player_task(robot_name: str, driver):
     try:
         print(f"Starting demo player {robot_name}")
         async with aiohttp.ClientSession() as client:
-            async with client.ws_connect("http://localhost:8000/api/play/0") as ws:
+            ## fails with any change in IP/port
+            async with client.ws_connect(f"http://{GameParameters.ADDR}:{GameParameters.PORT}/api/play/0") as ws:
                 await ws.send_json({"name": robot_name, "secret": str(uuid.uuid4())})
                 async for msg in ws:
                     if "echo" in msg.json():
@@ -137,13 +138,15 @@ async def runner_task(match: Match) -> None:
             match.arena_state_delay_line.append(deepcopy(match.arena))
         winner = match.arena.get_winner()
         if not winner:
-            winner = max(match.arena.robots, key=lambda r: r.health)
+            #winner = max(match.arena.robots, key=lambda r: r.health)
+            winner = match.arena.winner_calc()
         match.arena.winner = winner.name
         match.arena_state_delay_line.append(deepcopy(match.arena))
         match.finished = True
         match.event.set()
         match.event.clear()
-        print(f"{winner.name} is the winner!")
+        ## EGOLD
+        print(f"{winner.name} is the winner with max sum of {winner.health:.2f} health and {winner.damage_inflicted:.2f} damage inflicted!")
         if match.stats_db:
             print("Storing match stats ...", end="")
             match_id = store_match(match.stats_db, match.arena_id, datetime.now(tz=timezone.utc), winner.name)
@@ -156,7 +159,7 @@ async def runner_task(match: Match) -> None:
         print(f"Runner exception: {e!r}")
 
 
-async def server_task(bind_addr: str = "127.0.0.1") -> None:
+async def server_task(bind_addr: str = GameParameters.ADDR, list_port: int = GameParameters.PORT) -> None:
     app = web.Application()
     aiohttp_jinja2.setup(app, loader=jinja2.FileSystemLoader(TEMPLATE_PATH))
 
@@ -171,9 +174,9 @@ async def server_task(bind_addr: str = "127.0.0.1") -> None:
     app.router.add_static("/", STATIC_PATH, name="static", append_version=True)
     runner = web.AppRunner(app)
     await runner.setup()
-    site = web.TCPSite(runner, bind_addr, 8000)
+    site = web.TCPSite(runner, bind_addr, list_port)
     await site.start()
-    print(f"Serving on http://{bind_addr}:8000")
+    print(f"Serving on http://{bind_addr}:{list_port}")
     try:
         await asyncio.Future()
     finally:
@@ -270,6 +273,7 @@ async def play_handler(request):
                 msg = json.dumps(asdict(r), separators=(",", ":"))
                 await ws.send_str(msg)
                 if match.arena.winner is not None:
+                    await ws.send_json({"echo": f"{match.arena.winner.name} is the winner with max sum of {winner.health:.2f} health and {match.arena.winner.damage_inflicted:.2f} damage inflicted!"})
                     await ws.send_json({"echo": f"{match.arena.winner} is the winner!"})
                     break
                 if not r.live():
@@ -377,9 +381,19 @@ def leaderboard_handler(request):
 async def amain():
     parser = argparse.ArgumentParser()
     parser.add_argument("--addr", default="127.0.0.1", help="Battle server bind address (default: 127.0.0.1)")
+    #### EGOLD: Add arena size, max players options.
+    parser.add_argument("--port", default="8000", help=f"Battle server listen port (default: 8000)")
+    AW = GameParameters.ARENA_WIDTH
+    AH = GameParameters.ARENA_HEIGHT
+    parser.add_argument("--awidth", default=AW, help=f"Arena width in pixels: (default: {AW})")
+    parser.add_argument("--aheight", default=AH, help=f"Arena height in pixels: (default: {AH})")
     args = parser.parse_args()
     try:
-        await server_task(args.addr)
+        GameParameters.ARENA_WIDTH = int(args.awidth)
+        GameParameters.ARENA_HEIGHT = int(args.aheight)
+        GameParameters.PORT = int(args.port)
+        GameParameters.ADDR = args.addr
+        await server_task(args.addr, int(args.port))
     except KeyboardInterrupt:
         return
 
