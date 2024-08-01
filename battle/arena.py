@@ -13,6 +13,7 @@ class Arena:
     robots: List[Robot] = field(default_factory=list)
     missiles: List[Missile] = field(default_factory=list)
     winner: Optional[str] = None
+    finalstats: str = ""
     remaining: int = 6000
 
     def __post_init__(self):
@@ -196,10 +197,14 @@ class Arena:
 
     ## calculate likely winner in one location, not across 2 classes
     def winner_calc(self):
-        print("ROUND FINAL STATS:")
+        
+        finalstring = "ROUND FINAL STATS:\n"
         for r in self.robots:
-            print(f"\t{r.name}:\thealth: {r.health:.2f}\tdamage_inflicted: {r.damage_inflicted:.2f}")
-        print()
+            finalstring += f"\t{r.name}:\thealth: {r.health:.2f}\tdamage_inflicted: {r.damage_inflicted:.2f}\n"
+        finalstring += "\n"
+        print(finalstring)
+        self.finalstats = finalstring
+        
         return max(self.robots, key=lambda r: r.health+r.damage_inflicted if r.live() else 0)
 
         

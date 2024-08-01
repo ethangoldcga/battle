@@ -103,7 +103,7 @@ async def runner_task(match: Match) -> None:
             await asyncio.sleep(1)
         print(f"{len(match.arena.robots)} have joined, will start in {match.wait_time} seconds")
         await asyncio.sleep(match.wait_time)
-        print(f"Starting battle with: {', '.join(r.name for r in match.arena.robots)}")
+        print(f"Starting battle with: {', '.join(r.name for r in match.arena.robots)} at {datetime.now()}")
         match.started = True
         standing_orders = {r.name: RobotCommand(RobotCommandType.IDLE, 0) for r in match.arena.robots}
         while not match.arena.get_winner() and match.arena.remaining > 0:
@@ -274,6 +274,7 @@ async def play_handler(request):
                 await ws.send_str(msg)
                 if match.arena.winner is not None:
                     await ws.send_json({"echo": f"{match.arena.winner.name} is the winner with max sum of {winner.health:.2f} health and {match.arena.winner.damage_inflicted:.2f} damage inflicted!"})
+                    await ws.send_json({"echo": f"{match.arena.finalstats}"})
                     await ws.send_json({"echo": f"{match.arena.winner} is the winner!"})
                     break
                 if not r.live():
