@@ -1,17 +1,17 @@
 ## battle - a Python based robot battle simulator set in space
+## This is a fork of https://github.com/atcase/battle.git
+## as of June, 2024 for updates to the arena
+## See CHANGES.md file for details
+##
 
 This is a robot programming game which allows programming a virtual spaceship robot driver with simple commands
 to fight a battle against other players.
 
 ![](battle_demo.gif)
 
-Install from PyPI, with:
-
-    $ python3 -m pip install battle
-
 or alternatively from GitHub, with:
 
-    $ python3 -m pip install git+https://github.com/atcase/battle.git
+    $ python3 -m pip install git+https://github.com/ethangoldcga/battle.git
 
 A sample robot battlefield server can then be run with:
 
@@ -27,9 +27,6 @@ Three example robots are provided and will automaticaly join the demo game.
 - `chillbot`: a spaceship driver who stays still and shoots
 - `radarbot`: a spaceship driver with an optimized radar scanning algorithm
 
-Their source code can be viewed in [pongbot.py](https://github.com/atcase/battle/blob/master/battle/pongbot.py),
-[chillbot.py](https://github.com/atcase/battle/blob/master/battle/chillbot.py) and
-[radarbot.py](https://github.com/atcase/battle/blob/master/battle/radarbot.py) respectively.
 
 The robot driver works by calling the `get_next_command` function with the current state
 of the robot. The function then returns the next command to issue.
@@ -114,6 +111,6 @@ achieve this, however it can be overridden with the `--secret` command argument.
 The battlefield is located 10 light seconds from your terminal, and as such all vision is delayed by 10 seconds.
 
 ## Winning the game
+If all other robots have been destroyed, the last robot / spaceship pair standing is the winner.
+Each game expires after 5 minutes at which point the most the winner is determined by the sum of each surviving robot's remaining health and the total damage it caused to other robots.
 
-The last robot / spaceship pair standing is the winner. Each game expires after 5 minutes at which point the most
-healthy spaceship is deemed the winner.
