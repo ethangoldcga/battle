@@ -6,6 +6,7 @@
   * Radar now returns a tuple of (range, targetname), which is backwards
     compatible.
   * Wider aspect ratio for arena to fit projectors better (classroom battles)
-  * Changes to argv handling
+  * Increased maximum players limit to handle standard classroom rosters
+  *Changes to argv handling
 
   
