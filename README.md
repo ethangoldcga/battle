@@ -11,7 +11,7 @@ to fight a battle against other players.
 
 or alternatively from GitHub, with:
 
-    $ python3 -m pip install git+https://github.com/ethangoldcga/battle.git
+    $ python -m pip install git+https://github.com/ethangoldcga/battle.git
 
 A sample robot battlefield server can then be run with:
 
